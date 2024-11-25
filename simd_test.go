@@ -9,66 +9,182 @@ import (
 // DotUInt8NEON is implemented in assembly
 
 // Helper function to create test data
-func generateTestData(size int) ([]uint8, []uint8) {
+func generateUint8TestData(size int) ([]uint8, []uint8) {
 	a := make([]uint8, size)
 	b := make([]uint8, size)
 	for i := range a {
 		a[i] = uint8(rand.Intn(256))
 		b[i] = uint8(rand.Intn(256))
 	}
-	return []uint8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}, []uint8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
+	return a, b
 }
 
-func BenchmarkDotProduct(b *testing.B) {
+func generateInt8TestData(size int) ([]int8, []int8) {
+	a := make([]int8, size)
+	b := make([]int8, size)
+	for i := range a {
+		a[i] = int8(rand.Intn(256) - 128)
+		b[i] = int8(rand.Intn(256) - 128)
+	}
+	return a, b
+}
+
+func BenchmarkUint8DotProduct(b *testing.B) {
 	// Test different sizes including non-multiple of 16
 	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
 
 	for _, size := range sizes {
-		a, v := generateTestData(size)
+		// Generate test data outside the benchmark timing
+		a, v := generateUint8TestData(size)
 
 		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
-			b.SetBytes(int64(size)) // for bytes/sec metrics
+			// Reset timer after any setup
 			b.ResetTimer()
+			// Clear any memory statistics from setup
+			b.ReportAllocs()
+
 			for i := 0; i < b.N; i++ {
-				AddUint8SlicesScalar(a, v)
-				// DotUInt8Scalar(a, v)
+				dotUInt8Scalar(a, v)
 			}
 		})
 
 		b.Run("SIMD-"+fmt.Sprint(size), func(b *testing.B) {
-			b.SetBytes(int64(size)) // for bytes/sec metrics
 			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				DotUInt8Slices(a, v)
+			}
+		})
+	}
+}
+
+func BenchmarkInt8DotProduct(b *testing.B) {
+	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
+
+	for _, size := range sizes {
+		a, v := generateInt8TestData(size)
+
+		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				dotInt8Scalar(a, v)
+			}
+		})
+
+		b.Run("SIMD-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				DotInt8Slices(a, v)
+			}
+		})
+	}
+}
+
+func BenchmarkUint8Add(b *testing.B) {
+	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
+
+	for _, size := range sizes {
+		a, v := generateUint8TestData(size)
+
+		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				addUint8SlicesScalar(a, v)
+			}
+		})
+
+		b.Run("SIMD-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
 			for i := 0; i < b.N; i++ {
 				AddUint8Slices(a, v)
-				// DotUInt8(a, v)
+			}
+		})
+	}
+}
+
+func BenchmarkInt8Add(b *testing.B) {
+	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
+
+	for _, size := range sizes {
+		a, v := generateInt8TestData(size)
+
+		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				addInt8SlicesScalar(a, v)
+			}
+		})
+
+		b.Run("SIMD-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				AddInt8Slices(a, v)
 			}
 		})
 	}
 }
 
 // TestCorrectness verifies that both implementations return the same results
-func TestCorrectness(t *testing.T) {
-	sizes := []int{15, 16, 17, 100, 1000} // Test various sizes including non-multiples of 16
-
+func TestUint8Correctness(t *testing.T) {
+	sizes := []int{15, 16, 17, 100, 1000}
 	for _, size := range sizes {
-		a, b := generateTestData(size)
+		uint8_a, uint8_b := generateUint8TestData(size)
 
-		// scalarDot := DotUInt8Scalar(a, b)
-		// simdDot := DotUInt8(a, b)
+		uint8ScalarDot := dotUInt8Scalar(uint8_a, uint8_b)
+		uint8SimdDot := DotUInt8Slices(uint8_a, uint8_b)
 
-		// if scalarDot != simdDot {
-		// 	t.Errorf("FOR DOT-> Size %d: Results don't match. Scalar: %d, SIMD: %d",
-		// 		size, scalarDot, simdDot)
-		// }
+		if uint8ScalarDot != uint8SimdDot {
+			t.Errorf("Size %d: Scalar: %d, SIMD: %d", size, uint8ScalarDot, uint8SimdDot)
+		}
 
-		scalarSum := AddUint8SlicesScalar(a, b)
-		simdSum := AddUint8Slices(a, b)
+		uint8ScalarSum := addUint8SlicesScalar(uint8_a, uint8_b)
+		uint8SimdSum := AddUint8Slices(uint8_a, uint8_b)
 
-		for i := range scalarSum {
-			if scalarSum[i] != simdSum[i] {
+		for i := range uint8ScalarSum {
+			if uint8ScalarSum[i] != uint8SimdSum[i] {
 				t.Errorf("FOR ADD-> Size %d: Results don't match. Scalar: %d, SIMD: %d",
-					size, scalarSum[i], simdSum[i])
+					size, uint8ScalarSum[i], uint8SimdSum[i])
 			}
 		}
+
+	}
+}
+
+func TestInt8Correctness(t *testing.T) {
+	sizes := []int{15, 16, 17, 100, 1000}
+	for _, size := range sizes {
+
+		int8_a, int8_b := generateInt8TestData(size)
+
+		int8ScalarDot := dotInt8Scalar(int8_a, int8_b)
+		int8SimdDot := DotInt8Slices(int8_a, int8_b)
+
+		if int8ScalarDot != int8SimdDot {
+			t.Errorf("Size %d: Scalar: %d, SIMD: %d", size, int8ScalarDot, int8SimdDot)
+		}
+
+		int8ScalarSum := addInt8SlicesScalar(int8_a, int8_b)
+		int8SimdSum := AddInt8Slices(int8_a, int8_b)
+
+		for i := range int8ScalarSum {
+			if int8ScalarSum[i] != int8SimdSum[i] {
+				t.Errorf("FOR ADD-> Size %d: Results don't match. Scalar: %d, SIMD: %d",
+					size, int8ScalarSum[i], int8SimdSum[i])
+			}
+		}
+
 	}
 }
