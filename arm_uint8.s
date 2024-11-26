@@ -56,7 +56,7 @@ remainder_loop:
     MOVBU (R2), R7 // move unsigned byte from R2 into R7
     ADD R7, R6, R6 // R6 + R7 -> R6
     // Store to result - note R0 now
-    MOVB R6, (R0) // move byte from R6 into R0
+    MOVBU R6, (R0) // move byte from R6 into R0
     
     // Increment all pointers - note new register order
     ADD $1, R1
@@ -69,7 +69,53 @@ remainder_loop:
 done:
     RET
 
+// func subUint8Vec(a, b, result *uint8, n int)
+TEXT ·subUint8Vec(SB), NOSPLIT, $0-32
+    MOVD result+0(FP), R0
+    MOVD a+8(FP), R1
+    MOVD b+16(FP), R2
+    MOVD len+24(FP), R3
 
+    MOVD R3, R4
+    AND $~15, R4
+
+    CBZ R4, remainder
+
+    MOVD R4, R5
+
+loop:
+    CBZ R5, remainder
+
+    VLD1.P 16(R1), [V0.B16]  // from a
+    VLD1.P 16(R2), [V1.B16]  // from b
+
+    VSUB V1.B16, V0.B16, V0.B16
+
+    VST1.P [V0.B16], 16(R0)
+
+    SUB $16, R5, R5
+
+    JMP loop
+
+remainder:
+    AND $15, R3, R5
+    CBZ R5, done
+
+remainder_loop:
+    MOVBU (R1), R6
+    MOVBU (R2), R7
+    SUB R7, R6, R6
+    MOVBU R6, (R0)
+
+    ADD $1, R1
+    ADD $1, R2
+    ADD $1, R0
+
+    SUB $1, R5, R5
+    CBNZ R5, remainder_loop
+
+done:
+    RET
 
 // func dotUint8Vec(a, b *uint8, len int) uint32
 TEXT ·dotUint8Vec(SB), NOSPLIT, $0-32
