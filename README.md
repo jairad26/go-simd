@@ -2,7 +2,7 @@
 
 This repo is an ARM64 NEON architecture specific implementation of SIMD (Single Instruction, Multiple Data) operations in Go.
 
-The SIMD instructions are written entirely with Assembly, and does not use CGO, and wrapped in a more useable "API" layer function.
+The SIMD instructions are written entirely with Assembly, and does not use CGO, and wrapped in a more useable "API" layer.
 
 ## Benchmarks
 
