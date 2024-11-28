@@ -4,7 +4,7 @@ import "fmt"
 
 func addUint8SlicesScalar(a, b []uint8) []uint8 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	result := make([]uint8, len(a))
@@ -18,7 +18,7 @@ func addUint8SlicesScalar(a, b []uint8) []uint8 {
 
 func subUint8SlicesScalar(a, b []uint8) []uint8 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	result := make([]uint8, len(a))
@@ -32,7 +32,7 @@ func subUint8SlicesScalar(a, b []uint8) []uint8 {
 
 func dotUInt8Scalar(a, b []uint8) uint32 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	var result uint32
@@ -45,7 +45,7 @@ func dotUInt8Scalar(a, b []uint8) uint32 {
 
 func addInt8SlicesScalar(a, b []int8) []int8 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	result := make([]int8, len(a))
@@ -59,7 +59,7 @@ func addInt8SlicesScalar(a, b []int8) []int8 {
 
 func subInt8SlicesScalar(a, b []int8) []int8 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	result := make([]int8, len(a))
@@ -73,7 +73,7 @@ func subInt8SlicesScalar(a, b []int8) []int8 {
 
 func dotInt8Scalar(a, b []int8) int32 {
 	if len(a) != len(b) {
-		panic(fmt.Sprintf("slices must be same length: %d != %d", len(a), len(b)))
+		panic(fmt.Errorf("slices must be same length: %d != %d", len(a), len(b)))
 	}
 
 	var result int32
@@ -86,11 +86,11 @@ func dotInt8Scalar(a, b []int8) int32 {
 
 func MultInt8MatrixScalar(a, b [][]int8) [][]int32 {
 	if len(a[0]) != len(b) {
-		panic(fmt.Sprintf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
+		panic(fmt.Errorf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
 	}
 
 	if len(a) == 0 || len(b) == 0 {
-		panic(fmt.Sprintf("matrix a and b must have at least one row"))
+		panic(fmt.Errorf("matrix a and b must have at least one row"))
 	}
 
 	result := make([][]int32, len(a))
@@ -108,11 +108,11 @@ func MultInt8MatrixScalar(a, b [][]int8) [][]int32 {
 
 func MultUint8MatrixScalar(a, b [][]uint8) [][]uint32 {
 	if len(a[0]) != len(b) {
-		panic(fmt.Sprintf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
+		panic(fmt.Errorf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
 	}
 
 	if len(a) == 0 || len(b) == 0 {
-		panic(fmt.Sprintf("matrix a and b must have at least one row"))
+		panic(fmt.Errorf("matrix a and b must have at least one row"))
 	}
 
 	result := make([][]uint32, len(a))

@@ -1,7 +1,10 @@
+//go:build arm64
+// +build arm64
+
 #include "textflag.h"
 
-// func addUint8Vec(a, b, result *uint8, n uint)
-TEXT ·addUint8Vec(SB), NOSPLIT, $0-32
+// func AddUint8VecSIMD(a, b, result *uint8, n uint)
+TEXT ·AddUint8VecSIMD(SB), NOSPLIT, $0-32
     // the arguments are *uint8 so that we dont have to load in the array's 0th element, pointer, and capacity
     // pointer, length, and capacity are 8 bytes each, so we save 16 bytes per slice doing this
 
@@ -68,8 +71,8 @@ done:
     RET
 
 
-// func subUint8Vec(a, b, result *uint8, n uint)
-TEXT ·subUint8Vec(SB), NOSPLIT, $0-32
+// func SubUint8VecSIMD(a, b, result *uint8, n uint)
+TEXT ·SubUint8VecSIMD(SB), NOSPLIT, $0-32
     MOVD result+0(FP), R0
     MOVD a+8(FP), R1
     MOVD b+16(FP), R2
@@ -115,8 +118,8 @@ done:
 
 // The function below is inspired from https://github.com/camdencheek/simd_blog/blob/main/dot_arm64.s
 // Thank you @camdencheek for the great article https://sourcegraph.com/blog/slow-to-simd
-// func dotUint8VecSIMD16(a, b *uint8, len uint) int32
-TEXT ·dotUint8VecSIMD16(SB), NOSPLIT, $0-32
+// func DotUint8VecSIMD16(a, b *uint8, len uint) int32
+TEXT ·DotUint8VecSIMD16(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2
@@ -178,8 +181,8 @@ done:
 
 
 
-// func dotUint8VecSIMD32(a, b *uint8, len uint) int32
-TEXT ·dotUint8VecSIMD32(SB), NOSPLIT, $0-32
+// func DotUint8VecSIMD32(a, b *uint8, len uint) int32
+TEXT ·DotUint8VecSIMD32(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2
@@ -240,8 +243,8 @@ done:
 
 
 
-// func dotUint8VecSIMD64(a, b *uint8, len uint) int32
-TEXT ·dotUint8VecSIMD64(SB), NOSPLIT, $0-32
+// func DotUint8VecSIMD64(a, b *uint8, len uint) int32
+TEXT ·DotUint8VecSIMD64(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2

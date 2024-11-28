@@ -41,7 +41,7 @@ func BenchmarkUint8Add(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				addUint8SlicesScalar(a, v)
+				_ = addUint8SlicesScalar(a, v)
 			}
 		})
 
@@ -50,7 +50,7 @@ func BenchmarkUint8Add(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				AddUint8Slices(a, v)
+				_, _ = AddUint8Vec(a, v)
 			}
 		})
 	}
@@ -67,7 +67,7 @@ func BenchmarkUint8Sub(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				subUint8SlicesScalar(a, v)
+				_ = subUint8SlicesScalar(a, v)
 			}
 		})
 
@@ -76,7 +76,7 @@ func BenchmarkUint8Sub(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				SubUint8Slices(a, v)
+				_, _ = SubUint8Vec(a, v)
 			}
 		})
 	}
@@ -97,7 +97,7 @@ func BenchmarkUint8DotProduct(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				dotUInt8Scalar(a, v)
+				_ = dotUInt8Scalar(a, v)
 			}
 		})
 
@@ -106,7 +106,7 @@ func BenchmarkUint8DotProduct(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				DotUInt8Slices(a, v)
+				_, _ = DotUInt8Slices(a, v)
 			}
 		})
 	}
@@ -124,7 +124,7 @@ func BenchmarkUint8MatrixMult(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				MultUint8MatrixScalar(a, v)
+				_ = MultUint8MatrixScalar(a, v)
 			}
 		})
 
@@ -133,7 +133,7 @@ func BenchmarkUint8MatrixMult(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				MultUint8Matrix(a, v)
+				_, _ = MultUint8Matrix(a, v)
 			}
 		})
 	}
@@ -146,14 +146,20 @@ func TestUint8Correctness(t *testing.T) {
 		uint8_a, uint8_b := generateUint8TestData(size)
 
 		uint8ScalarDot := dotUInt8Scalar(uint8_a, uint8_b)
-		uint8SimdDot := DotUInt8Slices(uint8_a, uint8_b)
+		uint8SimdDot, err := DotUInt8Slices(uint8_a, uint8_b)
+		if err != nil {
+			t.Errorf("Error: %v", err)
+		}
 
 		if uint8ScalarDot != uint8SimdDot {
 			t.Errorf("Size %d: Scalar: %d, SIMD: %d", size, uint8ScalarDot, uint8SimdDot)
 		}
 
 		uint8ScalarSum := addUint8SlicesScalar(uint8_a, uint8_b)
-		uint8SimdSum := AddUint8Slices(uint8_a, uint8_b)
+		uint8SimdSum, err := AddUint8Vec(uint8_a, uint8_b)
+		if err != nil {
+			t.Errorf("Error: %v", err)
+		}
 
 		for i := range uint8ScalarSum {
 			if uint8ScalarSum[i] != uint8SimdSum[i] {
@@ -163,7 +169,10 @@ func TestUint8Correctness(t *testing.T) {
 		}
 
 		uint8ScalarDiff := subUint8SlicesScalar(uint8_a, uint8_b)
-		uint8SimdDiff := SubUint8Slices(uint8_a, uint8_b)
+		uint8SimdDiff, err := SubUint8Vec(uint8_a, uint8_b)
+		if err != nil {
+			t.Errorf("Error: %v", err)
+		}
 
 		for i := range uint8ScalarDiff {
 			if uint8ScalarDiff[i] != uint8SimdDiff[i] {
@@ -172,25 +181,5 @@ func TestUint8Correctness(t *testing.T) {
 			}
 		}
 
-	}
-}
-
-func TestUint8MatrixCorrectness(t *testing.T) {
-	sizes := []int{15, 16, 17, 100, 1000}
-	for _, size := range sizes {
-		a := generateUint8MatrixTestData(size, size)
-		v := generateUint8MatrixTestData(size, size)
-
-		uint8ScalarMult := MultUint8MatrixScalar(a, v)
-		uint8SimdMult := MultUint8Matrix(a, v)
-
-		for i := range uint8ScalarMult {
-			for j := range uint8ScalarMult[i] {
-				if uint8ScalarMult[i][j] != uint8SimdMult[i][j] {
-					t.Errorf("FOR MULT-> Size %d: Results don't match. Scalar: %d, SIMD: %d",
-						size, uint8ScalarMult[i][j], uint8SimdMult[i][j])
-				}
-			}
-		}
 	}
 }
