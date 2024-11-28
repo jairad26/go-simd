@@ -3,13 +3,13 @@ package main
 import "fmt"
 
 // Declare the functions implemented in arm_uint8.s
-func addUint8Vec(result, a, b *uint8, len int)
-func subUint8Vec(result, a, b *uint8, len int)
-func dotUint8VecSIMD16(a, b *uint8, len int) uint32
-func dotUint8VecSIMD32(a, b *uint8, len int) uint32
-func dotUint8VecSIMD64(a, b *uint8, len int) uint32
+func AddUint8VecSIMD(result, a, b *uint8, len int)
+func SubUint8VecSIMD(result, a, b *uint8, len int)
+func DotUint8VecSIMD16(a, b *uint8, len int) uint32
+func DotUint8VecSIMD32(a, b *uint8, len int) uint32
+func DotUint8VecSIMD64(a, b *uint8, len int) uint32
 
-func AddUint8Slices(a, b []uint8) ([]uint8, error) {
+func AddUint8Vec(a, b []uint8) ([]uint8, error) {
 	if len(a) != len(b) {
 		return nil, fmt.Errorf("slices must be same length: %d != %d", len(a), len(b))
 	}
@@ -21,11 +21,11 @@ func AddUint8Slices(a, b []uint8) ([]uint8, error) {
 	result := make([]uint8, len(a))
 
 	// Get pointer to start of each slice
-	addUint8Vec(&result[0], &a[0], &b[0], len(a))
+	AddUint8VecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
-func SubUint8Slices(a, b []uint8) ([]uint8, error) {
+func SubUint8Vec(a, b []uint8) ([]uint8, error) {
 	if len(a) != len(b) {
 		return nil, fmt.Errorf("slices must be same length: %d != %d", len(a), len(b))
 	}
@@ -36,7 +36,7 @@ func SubUint8Slices(a, b []uint8) ([]uint8, error) {
 
 	result := make([]uint8, len(a))
 
-	subUint8Vec(&result[0], &a[0], &b[0], len(a))
+	SubUint8VecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
@@ -50,11 +50,11 @@ func DotUInt8Slices(a, b []uint8) (uint32, error) {
 	}
 
 	if len(a) < 32 {
-		return dotUint8VecSIMD16(&a[0], &b[0], len(a)), nil
+		return DotUint8VecSIMD16(&a[0], &b[0], len(a)), nil
 	} else if len(a) < 64 {
-		return dotUint8VecSIMD32(&a[0], &b[0], len(a)), nil
+		return DotUint8VecSIMD32(&a[0], &b[0], len(a)), nil
 	} else {
-		return dotUint8VecSIMD64(&a[0], &b[0], len(a)), nil
+		return DotUint8VecSIMD64(&a[0], &b[0], len(a)), nil
 	}
 }
 

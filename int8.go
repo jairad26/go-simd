@@ -3,11 +3,11 @@ package main
 import "fmt"
 
 // Declare the functions implemented in arm_int8.s
-func addInt8Vec(result, a, b *int8, len int)
-func subInt8Vec(result, a, b *int8, len int)
-func dotInt8VecSIMD16(a, b *int8, len int) int32
-func dotInt8VecSIMD32(a, b *int8, len int) int32
-func dotInt8VecSIMD64(a, b *int8, len int) int32
+func AddInt8VecSIMD(result, a, b *int8, len int)
+func SubInt8VecSIMD(result, a, b *int8, len int)
+func DotInt8VecSIMD16(a, b *int8, len int) int32
+func DotInt8VecSIMD32(a, b *int8, len int) int32
+func DotInt8VecSIMD64(a, b *int8, len int) int32
 
 func AddInt8Vec(a, b []int8) ([]int8, error) {
 	if len(a) != len(b) {
@@ -20,7 +20,7 @@ func AddInt8Vec(a, b []int8) ([]int8, error) {
 
 	result := make([]int8, len(a))
 
-	addInt8Vec(&result[0], &a[0], &b[0], len(a))
+	AddInt8VecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
@@ -35,7 +35,7 @@ func SubInt8Vec(a, b []int8) ([]int8, error) {
 
 	result := make([]int8, len(a))
 
-	subInt8Vec(&result[0], &a[0], &b[0], len(a))
+	SubInt8VecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
@@ -49,11 +49,11 @@ func DotInt8Vec(a, b []int8) (int32, error) {
 	}
 
 	if len(a) < 32 {
-		return dotInt8VecSIMD16(&a[0], &b[0], len(a)), nil
+		return DotInt8VecSIMD16(&a[0], &b[0], len(a)), nil
 	} else if len(a) < 64 {
-		return dotInt8VecSIMD32(&a[0], &b[0], len(a)), nil
+		return DotInt8VecSIMD32(&a[0], &b[0], len(a)), nil
 	} else {
-		return dotInt8VecSIMD64(&a[0], &b[0], len(a)), nil
+		return DotInt8VecSIMD64(&a[0], &b[0], len(a)), nil
 	}
 }
 

@@ -50,7 +50,7 @@ func BenchmarkUint8Add(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				_, _ = AddUint8Slices(a, v)
+				_, _ = AddUint8Vec(a, v)
 			}
 		})
 	}
@@ -76,7 +76,7 @@ func BenchmarkUint8Sub(b *testing.B) {
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
-				_, _ = SubUint8Slices(a, v)
+				_, _ = SubUint8Vec(a, v)
 			}
 		})
 	}
@@ -156,7 +156,7 @@ func TestUint8Correctness(t *testing.T) {
 		}
 
 		uint8ScalarSum := addUint8SlicesScalar(uint8_a, uint8_b)
-		uint8SimdSum, err := AddUint8Slices(uint8_a, uint8_b)
+		uint8SimdSum, err := AddUint8Vec(uint8_a, uint8_b)
 		if err != nil {
 			t.Errorf("Error: %v", err)
 		}
@@ -169,7 +169,7 @@ func TestUint8Correctness(t *testing.T) {
 		}
 
 		uint8ScalarDiff := subUint8SlicesScalar(uint8_a, uint8_b)
-		uint8SimdDiff, err := SubUint8Slices(uint8_a, uint8_b)
+		uint8SimdDiff, err := SubUint8Vec(uint8_a, uint8_b)
 		if err != nil {
 			t.Errorf("Error: %v", err)
 		}
