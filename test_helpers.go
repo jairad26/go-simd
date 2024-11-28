@@ -83,3 +83,47 @@ func dotInt8Scalar(a, b []int8) int32 {
 
 	return result
 }
+
+func MultInt8MatrixScalar(a, b [][]int8) [][]int32 {
+	if len(a[0]) != len(b) {
+		panic(fmt.Sprintf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
+	}
+
+	if len(a) == 0 || len(b) == 0 {
+		panic(fmt.Sprintf("matrix a and b must have at least one row"))
+	}
+
+	result := make([][]int32, len(a))
+	for i := range len(a) { // a rows
+		result[i] = make([]int32, len(b[0])) // b columns
+		for j := range len(b[0]) {           // b columns
+			for k := 0; k < len(a[0]); k++ { // a columns
+				result[i][j] += int32(a[i][k]) * int32(b[k][j]) // dot product
+			}
+		}
+	}
+
+	return result
+}
+
+func MultUint8MatrixScalar(a, b [][]uint8) [][]uint32 {
+	if len(a[0]) != len(b) {
+		panic(fmt.Sprintf("matrix a columns must be same length as matrix b rows: %d != %d", len(a[0]), len(b)))
+	}
+
+	if len(a) == 0 || len(b) == 0 {
+		panic(fmt.Sprintf("matrix a and b must have at least one row"))
+	}
+
+	result := make([][]uint32, len(a))
+	for i := range len(a) { // a rows
+		result[i] = make([]uint32, len(b[0])) // b columns
+		for j := range len(b[0]) {            // b columns
+			for k := 0; k < len(a[0]); k++ { // a columns
+				result[i][j] += uint32(a[i][k]) * uint32(b[k][j]) // dot product
+			}
+		}
+	}
+
+	return result
+}

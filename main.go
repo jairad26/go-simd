@@ -19,7 +19,7 @@ func main() {
 	int8_a := []int8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 	int8_b := []int8{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
-	intDot := DotInt8Slices(int8_a, int8_b)
+	intDot := DotInt8Vec(int8_a, int8_b)
 	fmt.Println("Int8 SIMD:", intDot)
 
 	normalIntDot := dotInt8Scalar(int8_a, int8_b)

@@ -19,6 +19,17 @@ func generateUint8TestData(size int) ([]uint8, []uint8) {
 	return a, b
 }
 
+func generateUint8MatrixTestData(rows, cols int) [][]uint8 {
+	a := make([][]uint8, rows)
+	for i := range a {
+		a[i] = make([]uint8, cols)
+		for j := range a[i] {
+			a[i][j] = uint8(rand.Intn(256))
+		}
+	}
+	return a
+}
+
 func BenchmarkUint8Add(b *testing.B) {
 	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
 
@@ -101,6 +112,33 @@ func BenchmarkUint8DotProduct(b *testing.B) {
 	}
 }
 
+func BenchmarkUint8MatrixMult(b *testing.B) {
+	sizes := []int{16, 100}
+
+	for _, size := range sizes {
+		a := generateUint8MatrixTestData(size, size)
+		v := generateUint8MatrixTestData(size, size)
+
+		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				MultUint8MatrixScalar(a, v)
+			}
+		})
+
+		b.Run("SIMD-"+fmt.Sprint(size), func(b *testing.B) {
+			b.ResetTimer()
+			b.ReportAllocs()
+
+			for i := 0; i < b.N; i++ {
+				MultUint8Matrix(a, v)
+			}
+		})
+	}
+}
+
 // TestCorrectness verifies that both implementations return the same results
 func TestUint8Correctness(t *testing.T) {
 	sizes := []int{15, 16, 17, 100, 1000}
@@ -134,5 +172,25 @@ func TestUint8Correctness(t *testing.T) {
 			}
 		}
 
+	}
+}
+
+func TestUint8MatrixCorrectness(t *testing.T) {
+	sizes := []int{15, 16, 17, 100, 1000}
+	for _, size := range sizes {
+		a := generateUint8MatrixTestData(size, size)
+		v := generateUint8MatrixTestData(size, size)
+
+		uint8ScalarMult := MultUint8MatrixScalar(a, v)
+		uint8SimdMult := MultUint8Matrix(a, v)
+
+		for i := range uint8ScalarMult {
+			for j := range uint8ScalarMult[i] {
+				if uint8ScalarMult[i][j] != uint8SimdMult[i][j] {
+					t.Errorf("FOR MULT-> Size %d: Results don't match. Scalar: %d, SIMD: %d",
+						size, uint8ScalarMult[i][j], uint8SimdMult[i][j])
+				}
+			}
+		}
 	}
 }
