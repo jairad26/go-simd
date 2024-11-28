@@ -1,3 +1,6 @@
+//go:build arm64
+// +build arm64
+
 #include "textflag.h"
 
 // func addInt8Vec(a, b, result *int8, n int)
