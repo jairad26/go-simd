@@ -3,9 +3,9 @@
 
 #include "textflag.h"
 
-// func AddUint8VecSIMD(a, b, result *uint8, n uint)
-TEXT ·AddUint8VecSIMD(SB), NOSPLIT, $0-32
-    // the arguments are *uint8 so that we dont have to load in the array's 0th element, pointer, and capacity
+// func AddVecSIMD(a, b, result *int8, n int)
+TEXT ·AddVecSIMD(SB), NOSPLIT, $0-32
+    // the arguments are *int8 so that we dont have to load in the array's 0th element, pointer, and capacity
     // pointer, length, and capacity are 8 bytes each, so we save 16 bytes per slice doing this
 
     MOVD result+0(FP), R0  // pointer to 0th element of result
@@ -53,11 +53,11 @@ remainder:
     
 remainder_loop:
     // Load bytes from a and b
-    MOVBU (R1), R6 // move unsigned byte from R1 into R6
-    MOVBU (R2), R7 // move unsigned byte from R2 into R7
+    MOVB (R1), R6 // move unsigned byte from R1 into R6
+    MOVB (R2), R7 // move unsigned byte from R2 into R7
     ADD R7, R6, R6 // R6 + R7 -> R6
     // Store to result - note R0 now
-    MOVBU R6, (R0) // move byte from R6 into R0
+    MOVB R6, (R0) // move byte from R6 into R0
     
     // Increment all pointers - note new register order
     ADD $1, R1
@@ -71,8 +71,8 @@ done:
     RET
 
 
-// func SubUint8VecSIMD(a, b, result *uint8, n uint)
-TEXT ·SubUint8VecSIMD(SB), NOSPLIT, $0-32
+// func SubVecSIMD(a, b, result *int8, n int)
+TEXT ·SubVecSIMD(SB), NOSPLIT, $0-32
     MOVD result+0(FP), R0
     MOVD a+8(FP), R1
     MOVD b+16(FP), R2
@@ -101,10 +101,10 @@ remainder:
     CBZ R4, done
 
 remainder_loop:
-    MOVBU (R1), R6
-    MOVBU (R2), R7
+    MOVB (R1), R6
+    MOVB (R2), R7
     SUB R7, R6, R6
-    MOVBU R6, (R0)
+    MOVB R6, (R0)
 
     ADD $1, R1
     ADD $1, R2
@@ -118,8 +118,8 @@ done:
 
 // The function below is inspired from https://github.com/camdencheek/simd_blog/blob/main/dot_arm64.s
 // Thank you @camdencheek for the great article https://sourcegraph.com/blog/slow-to-simd
-// func DotUint8VecSIMD16(a, b *uint8, len uint) int32
-TEXT ·DotUint8VecSIMD16(SB), NOSPLIT, $0-32
+// func DotVecSIMD16(a, b *int8, len int) int32
+TEXT ·DotVecSIMD16(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2
@@ -142,12 +142,12 @@ loop:
     // The following instruction is not supported by the go assembler, so use
 	// the binary format. It would be the equivalent of the following instruction:
 	//
-    // UDOT V1.B16, V2.B16, V0.S4 // V1.B16 * V2.B16 -> V0.S4
+    // SDOT V1.B16, V2.B16, V0.S4 // V1.B16 * V2.B16 -> V0.S4
     // this creates a dot product for each 4 bytes in V1 and V2, and stores the sum in V0
 	//
 	// Generated the binary form of the instruction using this godbolt setup:
-	// https://godbolt.org/z/r5b1axedY
-	WORD $0x6E829420
+	// https://godbolt.org/z/3jPohn4dn
+	WORD $0x4E829420
 
     SUB $16, R4, R4
 
@@ -161,8 +161,8 @@ remainder:
 remainder_loop:
     
     // Load single bytes and multiply
-    MOVBU.P 1(R0), R5
-    MOVBU.P 1(R1), R6
+    MOVB.P 1(R0), R5
+    MOVB.P 1(R1), R6
     MUL R5, R6, R7
     ADD R7, R8      // Accumulate in R8
     
@@ -181,8 +181,8 @@ done:
 
 
 
-// func DotUint8VecSIMD32(a, b *uint8, len uint) int32
-TEXT ·DotUint8VecSIMD32(SB), NOSPLIT, $0-32
+// func DotVecSIMD32(a, b *int8, len int) int32
+TEXT ·DotVecSIMD32(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2
@@ -205,13 +205,13 @@ loop:
     // The following instruction is not supported by the go assembler, so use
 	// the binary format. It would be the equivalent of the following instruction:
 	//
-    // UDOT V2.B16, V4.B16, V0.S4
-    // UDOT V3.B16, V5.B16, V1.S4
+    // SDOT V2.B16, V4.B16, V0.S4
+    // SDOT V3.B16, V5.B16, V1.S4
 	//
 	// Generated the binary form of the instruction using this godbolt setup:
-	// https://godbolt.org/z/EdbxvTvhz
-	WORD $0x6E849440
-    WORD $0x6E859461
+	// https://godbolt.org/z/hc7r1ssjh
+	WORD $0x4E849440
+    WORD $0x4E859461
 
     SUB $32, R4, R4
 
@@ -225,8 +225,8 @@ remainder:
 
 remainder_loop:
     
-    MOVBU.P 1(R0), R5
-    MOVBU.P 1(R1), R6
+    MOVB.P 1(R0), R5
+    MOVB.P 1(R1), R6
     MUL R5, R6, R7
     ADD R7, R8
     
@@ -243,8 +243,8 @@ done:
 
 
 
-// func DotUint8VecSIMD64(a, b *uint8, len uint) int32
-TEXT ·DotUint8VecSIMD64(SB), NOSPLIT, $0-32
+// func DotVecSIMD64(a, b *int8, len int) int32
+TEXT ·DotVecSIMD64(SB), NOSPLIT, $0-32
     MOVD a_base+0(FP), R0
     MOVD b_base+8(FP), R1
     MOVD len+16(FP), R2
@@ -276,11 +276,11 @@ loop:
     // this creates a dot product for each 4 bytes in V1 and V2, and stores the sum in V0
 	//
 	// Generated the binary form of the instruction using this godbolt setup:
-	// https://godbolt.org/z/M45roP43Y
-	WORD $0x6E889480
-    WORD $0x6E8994A1
-    WORD $0x6E8A94C2
-    WORD $0x6E8B94E3
+	// https://godbolt.org/z/Pen37K4Mq
+	WORD $0x4E889480
+    WORD $0x4E8994A1
+    WORD $0x4E8A94C2
+    WORD $0x4E8B94E3
 
     SUB $64, R4, R4
 
@@ -296,8 +296,8 @@ remainder:
 
 remainder_loop:
     
-    MOVBU.P 1(R0), R5
-    MOVBU.P 1(R1), R6
+    MOVB.P 1(R0), R5
+    MOVB.P 1(R1), R6
     MUL R5, R6, R7
     ADD R7, R8
     

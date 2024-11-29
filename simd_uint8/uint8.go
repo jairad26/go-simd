@@ -1,15 +1,15 @@
-package main
+package simd_uint8
 
 import "fmt"
 
 // Declare the functions implemented in arm_uint8.s
-func AddUint8VecSIMD(result, a, b *uint8, len int)
-func SubUint8VecSIMD(result, a, b *uint8, len int)
-func DotUint8VecSIMD16(a, b *uint8, len int) uint32
-func DotUint8VecSIMD32(a, b *uint8, len int) uint32
-func DotUint8VecSIMD64(a, b *uint8, len int) uint32
+func AddVecSIMD(result, a, b *uint8, len int)
+func SubVecSIMD(result, a, b *uint8, len int)
+func DotVecSIMD16(a, b *uint8, len int) uint32
+func DotVecSIMD32(a, b *uint8, len int) uint32
+func DotVecSIMD64(a, b *uint8, len int) uint32
 
-func AddUint8Vec(a, b []uint8) ([]uint8, error) {
+func AddVec(a, b []uint8) ([]uint8, error) {
 	if len(a) != len(b) {
 		return nil, fmt.Errorf("slices must be same length: %d != %d", len(a), len(b))
 	}
@@ -21,11 +21,11 @@ func AddUint8Vec(a, b []uint8) ([]uint8, error) {
 	result := make([]uint8, len(a))
 
 	// Get pointer to start of each slice
-	AddUint8VecSIMD(&result[0], &a[0], &b[0], len(a))
+	AddVecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
-func SubUint8Vec(a, b []uint8) ([]uint8, error) {
+func SubVec(a, b []uint8) ([]uint8, error) {
 	if len(a) != len(b) {
 		return nil, fmt.Errorf("slices must be same length: %d != %d", len(a), len(b))
 	}
@@ -36,11 +36,11 @@ func SubUint8Vec(a, b []uint8) ([]uint8, error) {
 
 	result := make([]uint8, len(a))
 
-	SubUint8VecSIMD(&result[0], &a[0], &b[0], len(a))
+	SubVecSIMD(&result[0], &a[0], &b[0], len(a))
 	return result, nil
 }
 
-func DotUInt8Slices(a, b []uint8) (uint32, error) {
+func DotVec(a, b []uint8) (uint32, error) {
 	if len(a) != len(b) {
 		return 0, fmt.Errorf("slices must be same length: %d != %d", len(a), len(b))
 	}
@@ -50,15 +50,15 @@ func DotUInt8Slices(a, b []uint8) (uint32, error) {
 	}
 
 	if len(a) < 32 {
-		return DotUint8VecSIMD16(&a[0], &b[0], len(a)), nil
+		return DotVecSIMD16(&a[0], &b[0], len(a)), nil
 	} else if len(a) < 64 {
-		return DotUint8VecSIMD32(&a[0], &b[0], len(a)), nil
+		return DotVecSIMD32(&a[0], &b[0], len(a)), nil
 	} else {
-		return DotUint8VecSIMD64(&a[0], &b[0], len(a)), nil
+		return DotVecSIMD64(&a[0], &b[0], len(a)), nil
 	}
 }
 
-func MultUint8Matrix(a, b [][]uint8) ([][]uint32, error) {
+func MultMatrix(a, b [][]uint8) ([][]uint32, error) {
 	if len(a[0]) != len(b) {
 		return nil, fmt.Errorf("matrix a columns must be equal to matrix b rows: %d != %d", len(a[0]), len(b))
 	}
@@ -77,7 +77,7 @@ func MultUint8Matrix(a, b [][]uint8) ([][]uint32, error) {
 			for k := 0; k < len(b); k++ {
 				column[k] = b[k][j]
 			}
-			result[i][j], err = DotUInt8Slices(a[i], column)
+			result[i][j], err = DotVec(a[i], column)
 			if err != nil {
 				return nil, err
 			}
