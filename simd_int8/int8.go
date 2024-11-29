@@ -1,3 +1,6 @@
+//go:build arm64
+// +build arm64
+
 package simd_int8
 
 import "fmt"
