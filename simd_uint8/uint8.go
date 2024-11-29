@@ -3,10 +3,20 @@ package simd_uint8
 import "fmt"
 
 // Declare the functions implemented in arm_uint8.s
+//
+//go:noescape
 func AddVecSIMD(result, a, b *uint8, len int)
+
+//go:noescape
 func SubVecSIMD(result, a, b *uint8, len int)
+
+//go:noescape
 func DotVecSIMD16(a, b *uint8, len int) uint32
+
+//go:noescape
 func DotVecSIMD32(a, b *uint8, len int) uint32
+
+//go:noescape
 func DotVecSIMD64(a, b *uint8, len int) uint32
 
 func AddVec(a, b []uint8) ([]uint8, error) {
