@@ -196,21 +196,24 @@ func TestMemoryAlignmentRigorous(t *testing.T) {
 	}{
 		{"SIMD16", 17, []int{1, 3, 7, 11, 13, 15}},
 		{"SIMD32", 33, []int{1, 5, 11, 17, 23, 29, 31}},
-		{"SIMD64", 65, []int{1, 7, 13, 23, 37, 47, 59, 63}},
-		{"SIMD128", 129, []int{1, 15, 31, 47, 63}},
-		{"VERY_LARGE", 1024, []int{1, 15, 31, 47, 63}},
-		{"VERY_VERY_LARGE", 10000, []int{1, 15, 31, 47, 63}},
+		{"SIMD64", 65, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"SIMD128", 129, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"VERY_LARGE", 1024, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"VERY_VERY_LARGE", 10000, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
 	}
 
 	for _, ts := range testSizes {
 		t.Run(ts.name, func(t *testing.T) {
 			rawBuffer := make([]byte, 16384+64)
+			baseAddr := uintptr(unsafe.Pointer(&rawBuffer[0]))
+			padding := (64 - (baseAddr % 64)) % 64
 
-			for _, offset := range ts.alignments {
-				// Use slice indexing instead of pointer arithmetic
-				slice := rawBuffer[offset:]
-				a := slice[:ts.size]
-				b := slice[:ts.size]
+			for _, misalign := range ts.alignments {
+				misalignedAddr := baseAddr + padding + uintptr(misalign)
+				misalignedPtr := unsafe.Pointer(misalignedAddr)
+
+				a := unsafe.Slice((*byte)(misalignedPtr), ts.size)
+				b := unsafe.Slice((*byte)(misalignedPtr), ts.size)
 
 				for i := 0; i < ts.size; i++ {
 					a[i] = byte(i % 128)
@@ -220,9 +223,9 @@ func TestMemoryAlignmentRigorous(t *testing.T) {
 				aAddr := uintptr(unsafe.Pointer(&a[0]))
 				bAddr := uintptr(unsafe.Pointer(&b[0]))
 
-				if aAddr%32 == 0 || bAddr%32 == 0 {
-					t.Errorf("%s still aligned at offset %d: a:%x (mod 32: %d) b:%x (mod 32: %d)",
-						ts.name, offset, aAddr, aAddr%32, bAddr, bAddr%32)
+				if aAddr%16 == 0 || bAddr%16 == 0 {
+					t.Errorf("%s still aligned at offset %d: a:%x (mod 16: %d) b:%x (mod 16: %d)",
+						ts.name, misalign, aAddr, aAddr%16, bAddr, bAddr%16)
 				}
 
 				aInt8 := *(*[]uint8)(unsafe.Pointer(&a))
@@ -231,12 +234,12 @@ func TestMemoryAlignmentRigorous(t *testing.T) {
 				result, err := DotVec(aInt8, bInt8)
 
 				if err != nil {
-					t.Fatalf("%s error at offset %d: %v", ts.name, offset, err)
+					t.Fatalf("%s error at offset %d: %v", ts.name, misalign, err)
 				}
 
 				if result != expected {
 					t.Errorf("%s offset %d: misaligned addresses failed: got %d, want %d\na:%x (mod 32: %d)\nb:%x (mod 32: %d)",
-						ts.name, offset, result, expected, aAddr, aAddr%32, bAddr, bAddr%32)
+						ts.name, misalign, result, expected, aAddr, aAddr%32, bAddr, bAddr%32)
 				}
 			}
 		})
