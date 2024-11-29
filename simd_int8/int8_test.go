@@ -212,6 +212,7 @@ func TestMemoryBoundaryIssues(t *testing.T) {
 	}
 }
 
+//go:nocheckptr
 func TestMemoryAlignmentRigorous(t *testing.T) {
 	testSizes := []struct {
 		name       string

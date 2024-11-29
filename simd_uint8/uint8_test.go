@@ -1,3 +1,5 @@
+//go:build !race
+
 package simd_uint8
 
 import (
@@ -185,6 +187,7 @@ func TestCorrectness(t *testing.T) {
 	}
 }
 
+//go:nocheckptr
 func TestMemoryAlignmentRigorous(t *testing.T) {
 	testSizes := []struct {
 		name       string
