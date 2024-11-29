@@ -32,3 +32,12 @@ ok   go-simd 16.531s
 ```
 
 Results are ~14x faster with SIMD for 100000 elements.
+
+## Contributing
+
+### Development Prerequisites
+
+- ARM64 architecture (Apple Silicon or equivalent)
+- CPU supports Neon SIMD
+
+But other than that just add a test & benchmark for each SIMD operation and open a PR :D
