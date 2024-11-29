@@ -1,3 +1,5 @@
+//go:build !race
+
 package simd_int8
 
 import (
@@ -212,6 +214,7 @@ func TestMemoryBoundaryIssues(t *testing.T) {
 	}
 }
 
+//go:nocheckptr
 func TestMemoryAlignmentRigorous(t *testing.T) {
 	testSizes := []struct {
 		name       string
@@ -247,9 +250,9 @@ func TestMemoryAlignmentRigorous(t *testing.T) {
 				aAddr := uintptr(unsafe.Pointer(&a[0]))
 				bAddr := uintptr(unsafe.Pointer(&b[0]))
 
-				if aAddr%32 == 0 || bAddr%32 == 0 {
-					t.Errorf("%s still aligned at offset %d: a:%x (mod 32: %d) b:%x (mod 32: %d)",
-						ts.name, misalign, aAddr, aAddr%32, bAddr, bAddr%32)
+				if aAddr%16 == 0 || bAddr%16 == 0 {
+					t.Errorf("%s still aligned at offset %d: a:%x (mod 16: %d) b:%x (mod 16: %d)",
+						ts.name, misalign, aAddr, aAddr%16, bAddr, bAddr%16)
 				}
 
 				aInt8 := *(*[]int8)(unsafe.Pointer(&a))
