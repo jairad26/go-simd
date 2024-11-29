@@ -1,3 +1,5 @@
+//go:build !race
+
 package simd_int8
 
 import (
