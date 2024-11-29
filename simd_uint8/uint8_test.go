@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"unsafe"
 )
 
 // DotUInt8NEON is implemented in assembly
@@ -181,5 +182,63 @@ func TestCorrectness(t *testing.T) {
 			}
 		}
 
+	}
+}
+
+func TestMemoryAlignmentRigorous(t *testing.T) {
+	testSizes := []struct {
+		name       string
+		size       int
+		alignments []int
+	}{
+		{"SIMD16", 17, []int{1, 3, 7, 11, 13, 15}},
+		{"SIMD32", 33, []int{1, 5, 11, 17, 23, 29, 31}},
+		{"SIMD64", 65, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"SIMD128", 129, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"VERY_LARGE", 1024, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+		{"VERY_VERY_LARGE", 10000, []int{1, 7, 13, 15, 23, 31, 37, 47, 59, 63}},
+	}
+
+	for _, ts := range testSizes {
+		t.Run(ts.name, func(t *testing.T) {
+			rawBuffer := make([]byte, 16384+64)
+			baseAddr := uintptr(unsafe.Pointer(&rawBuffer[0]))
+			padding := (64 - (baseAddr % 64)) % 64
+
+			for _, misalign := range ts.alignments {
+				misalignedAddr := baseAddr + padding + uintptr(misalign)
+				misalignedPtr := unsafe.Pointer(misalignedAddr)
+
+				a := unsafe.Slice((*byte)(misalignedPtr), ts.size)
+				b := unsafe.Slice((*byte)(misalignedPtr), ts.size)
+
+				for i := 0; i < ts.size; i++ {
+					a[i] = byte(i % 128)
+					b[i] = byte(i % 128)
+				}
+
+				aAddr := uintptr(unsafe.Pointer(&a[0]))
+				bAddr := uintptr(unsafe.Pointer(&b[0]))
+
+				if aAddr%32 == 0 || bAddr%32 == 0 {
+					t.Errorf("%s still aligned at offset %d: a:%x (mod 32: %d) b:%x (mod 32: %d)",
+						ts.name, misalign, aAddr, aAddr%32, bAddr, bAddr%32)
+				}
+
+				aInt8 := *(*[]uint8)(unsafe.Pointer(&a))
+				bInt8 := *(*[]uint8)(unsafe.Pointer(&b))
+				expected := dotScalar(aInt8, bInt8)
+				result, err := DotVec(aInt8, bInt8)
+
+				if err != nil {
+					t.Fatalf("%s error at offset %d: %v", ts.name, misalign, err)
+				}
+
+				if result != expected {
+					t.Errorf("%s offset %d: misaligned addresses failed: got %d, want %d\na:%x (mod 32: %d)\nb:%x (mod 32: %d)",
+						ts.name, misalign, result, expected, aAddr, aAddr%32, bAddr, bAddr%32)
+				}
+			}
+		})
 	}
 }
