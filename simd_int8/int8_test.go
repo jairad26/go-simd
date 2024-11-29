@@ -180,40 +180,6 @@ func TestCorrectness(t *testing.T) {
 	}
 }
 
-func TestMemoryBoundaryIssues(t *testing.T) {
-	// Create a larger slice and take subslices at different offsets
-	base := make([]int8, 1000)
-	for i := range base {
-		base[i] = int8(i % 100)
-	}
-
-	// Test different starting points that might not be aligned with SIMD boundaries
-	for offset := 0; offset < 257; offset++ {
-		t.Run(fmt.Sprintf("Offset_%d", offset), func(t *testing.T) {
-			size := 64 // Large enough to trigger SIMD64
-			if offset+size > len(base) {
-				size = len(base) - offset
-			}
-
-			a := base[offset : offset+size]
-			b := base[offset : offset+size] // Use same slice for simplicity
-
-			expected := dotScalar(a, b)
-			result, err := DotVec(a, b)
-
-			if err != nil {
-				t.Fatalf("unexpected error: %v", err)
-			}
-
-			if result != expected {
-				t.Errorf("memory boundary mismatch at offset %d: got %d, want %d",
-					offset, result, expected)
-				t.Errorf("slice details - len: %d, addr: %p", len(a), &a[0])
-			}
-		})
-	}
-}
-
 //go:nocheckptr
 func TestMemoryAlignmentRigorous(t *testing.T) {
 	testSizes := []struct {

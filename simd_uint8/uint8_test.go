@@ -9,9 +9,6 @@ import (
 	"unsafe"
 )
 
-// DotUInt8NEON is implemented in assembly
-
-// Helper function to create test data
 func generateTestData(size int) ([]uint8, []uint8) {
 	a := make([]uint8, size)
 	b := make([]uint8, size)
@@ -86,17 +83,13 @@ func BenchmarkSub(b *testing.B) {
 }
 
 func BenchmarkDotProduct(b *testing.B) {
-	// Test different sizes including non-multiple of 16
 	sizes := []int{16, 100, 1000, 4096, 10000, 100000}
 
 	for _, size := range sizes {
-		// Generate test data outside the benchmark timing
 		a, v := generateTestData(size)
 
 		b.Run("Scalar-"+fmt.Sprint(size), func(b *testing.B) {
-			// Reset timer after any setup
 			b.ResetTimer()
-			// Clear any memory statistics from setup
 			b.ReportAllocs()
 
 			for i := 0; i < b.N; i++ {
