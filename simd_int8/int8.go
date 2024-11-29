@@ -1,12 +1,25 @@
+//go:build arm64
+// +build arm64
+
 package simd_int8
 
 import "fmt"
 
 // Declare the functions implemented in arm_int8.s
+
+//go:noescape
 func AddVecSIMD(result, a, b *int8, len int)
+
+//go:noescape
 func SubVecSIMD(result, a, b *int8, len int)
+
+//go:noescape
 func DotVecSIMD16(a, b *int8, len int) int32
+
+//go:noescape
 func DotVecSIMD32(a, b *int8, len int) int32
+
+//go:noescape
 func DotVecSIMD64(a, b *int8, len int) int32
 
 func AddVec(a, b []int8) ([]int8, error) {

@@ -10,7 +10,7 @@ on:
 jobs:
   golangci:
     name: lint
-    runs-on: ubuntu-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       
@@ -21,6 +21,9 @@ jobs:
           cache: true
       
       - name: golangci-lint
+        env:
+          GOARCH: arm64
+          GOOS: darwin
         uses: golangci/golangci-lint-action@v4
         with:
           version: latest
